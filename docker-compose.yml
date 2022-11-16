@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  db: # 컨테이너2: db
+    image: mysql/mysql-server:8.0
+    volumes:
+      - "./02_db/init.d/:/docker-entrypoint-initdb.d/"
+    ports:
+      - "33067:3306"
+    container_name: db
+    environment:
+      # set database, memcached etc credentials
+      - TZ=Asia/Seoul
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=flask
+
+  app: # 컨테이너1 : app
+    # image: python:3.10-alpine
+    image: flask_app:0.0
+    build:
+      context: ./01_app
+      dockerfile: Dockerfile
+    ports:
+      - "5005:5000"
+    container_name: app
+    links:
+      - db
+    depends_on:
+      - db
+    environment:
+      - TZ=Asia/Seoul
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 10
